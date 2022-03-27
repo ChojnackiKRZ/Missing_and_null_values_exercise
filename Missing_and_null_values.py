@@ -8,6 +8,7 @@ Created on Sun Mar 27 10:56:47 2022
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 pd.options.display.float_format = '{:.2%}'.format
 
@@ -22,7 +23,7 @@ null_count = df_null.isnull().sum().rename('null_count').to_frame()
 null_count['pct_empty'] = null_count['null_count'] / len (df_null)
 print (null_count)
 
-#bar plot showing null count
+#bar plot showing null count with percentage above each bar
 plt.figure(figsize = (8, 8))
 graph = plt.bar(null_count.index, null_count['null_count'])
 plt.title('Number and percentage of nulls in columns with null')
@@ -39,3 +40,15 @@ for p in graph:
              weight='bold')
     i+=1
 plt.show()
+
+#datatypes and numeric columns selection for correlation
+df.dtypes
+numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+num_df = df.select_dtypes(include=numerics)
+
+#correlation
+corr_matrix = num_df.corr()
+sns.heatmap(corr_matrix, annot=True)
+plt.show()
+corr_price = corr_matrix['Price'].rename('Price_corr').to_frame()
+ 
