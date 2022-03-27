@@ -23,6 +23,18 @@ null_count = df_null.isnull().sum().rename('null_count').to_frame()
 null_count['pct_empty'] = null_count['null_count'] / len (df_null)
 print (null_count)
 
+columns = df_null.columns.tolist()
+
+for col in columns:
+    df_null[col + '_nan'] = ''
+
+#done with for-loop because logic mask did not work for np.nans
+for col in columns:
+    col_name = col + '_nan'
+    for record in range (0, len (df_null)):
+        if str(df_null[col].iloc[record]) == 'nan':
+            df_null[col_name].iloc[record] = True
+            
 #bar plot showing null count with percentage above each bar
 plt.figure(figsize = (8, 8))
 graph = plt.bar(null_count.index, null_count['null_count'])
@@ -59,7 +71,6 @@ corr_matrix_logic_mask = ((corr_matrix < 0.3) | (corr_matrix < -0.3))
 sns.heatmap(corr_matrix, annot=True, mask = corr_matrix_logic_mask)
 plt.show()
 corr_price = corr_matrix['Price'].rename('Price_corr').to_frame()
-
 
 #%%
 '''Zadanie 2'''
@@ -138,6 +149,10 @@ impt_results = pd.DataFrame(impt.transform(df_null[['Car', 'BuildingArea', 'Coun
 impt_results = impt_results.rename(columns = {0 : 'Car', 1 : 'BuildingArea', 2 : 'CouncilAreaID'})
 #re-mapping
 impt_results['CouncilArea'] = impt_results['CouncilAreaID'].map({v: k for k, v in uniqe_CouncilArea.items()})
+
+'''Zestawienie wyników'''
+
+
 #%%
 '''Usuwanie brakujacych danych'''
 '''1.Usuwanie wartosci pustych przy pomocy pandas'''
