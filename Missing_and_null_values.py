@@ -58,17 +58,29 @@ corr_price = corr_matrix['Price'].rename('Price_corr').to_frame()
 import pandas as pd
 from typing import List
 
-def load_file (file_name: str, columns: List[str]) -> pd.DataFrame:
+def load_file (file_name: str, columns: List[str] = 'All') -> pd.DataFrame:
+    '''
+    Allows to load a file in selected directory.
+    Parameter columns need list of strings. Default value is 'All', which
+    means on default whole file will be loaded.
+    Function returns 2 data frames: first for loaded file, second consisting of
+    columns with nulls.
+    '''
+    global null_cols
     file_name = str(file_name)
-    if type(columns) != list:
-        raise TypeError('columns parameter must be a list of strings')
+    if columns == 'All':
+        return pd.read_csv(file_name)
     else:
-        for types in columns:
-            if type(types) != str:
-                raise TypeError('each value in list must be a string')
-    return pd.read_csv(file_name, usecols=columns)
+        if type(columns) != list:
+            raise TypeError('columns parameter must be a list of strings')
+        else:
+            for types in columns:
+                if type(types) != str:
+                    raise TypeError('each value in list must be a string')
+        df = pd.read_csv(file_name, usecols=columns)
+        null_cols = df.columns[df.isna().any()].rename('col_name')
+        return pd.read_csv(file_name, usecols=columns)
+
+df = load_file('houses_data.csv', ['Price', 'Car'])
 
 
-
-
- 
