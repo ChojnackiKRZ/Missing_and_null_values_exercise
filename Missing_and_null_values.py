@@ -69,6 +69,8 @@ def load_file (file_name: str, columns: List[str] = 'All') -> pd.DataFrame:
     global null_cols
     file_name = str(file_name)
     if columns == 'All':
+        df = pd.read_csv(file_name)
+        null_cols = df.columns[df.isna().any()].rename('col_name')
         return pd.read_csv(file_name)
     else:
         if type(columns) != list:
@@ -81,6 +83,16 @@ def load_file (file_name: str, columns: List[str] = 'All') -> pd.DataFrame:
         null_cols = df.columns[df.isna().any()].rename('col_name')
         return pd.read_csv(file_name, usecols=columns)
 
-df = load_file('houses_data.csv', ['Price', 'Car'])
+df = load_file('houses_data.csv')
+#%%
+from sklearn.impute import SimpleImputer
+import numpy as np
 
+numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+num_df = df.select_dtypes(include=numerics)
+num_cols = num_df.columns
 
+#SimpleImputer
+mean_imputer = SimpleImputer(missing_values=np.nan, strategy='median')
+mean_imputer = mean_imputer.fit(df[num_cols])
+imputed_df = pd.DataFrame(mean_imputer.transform(df[num_cols]))
