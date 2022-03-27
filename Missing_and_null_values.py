@@ -169,3 +169,27 @@ drop_thresh = df_nulls.dropna(thresh = 2) #Keep only the rows with at least
 drop_col = df_nulls.dropna(subset = ['Car']) #usuwa tylko nulle z danej kolumny
                                              #wywala jednak caly wiersz
 
+#%%
+#train-test-split
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_absolute_error
+from sklearn.linear_model import LinearRegression
+
+numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
+houses_predictors = df.select_dtypes(include=numerics)
+houses_target = df['Price']
+
+
+X_train, X_test, y_train, y_test = train_test_split(houses_predictors,
+                                                    houses_target,
+                                                    train_size = 0.7,
+                                                    test_size = 0.3,
+                                                    random_state=0)
+
+def score_dataset(X_train, X_test, y_train, y_test):
+    regr_model = LinearRegression()
+    regr_model.fit(X_train, y_train)
+    preds = regr_model.predict(X_test)
+    return mean_absolute_error(y_test, preds)
+
+score_dataset(X_train, X_test, y_train, y_test)
