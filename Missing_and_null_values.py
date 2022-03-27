@@ -108,4 +108,15 @@ imputed_df_2 = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']]))
 
 
 #%%
+df_nulls = df[null_cols]
+
+drop_axis1 = df_nulls.dropna(axis = 1) #usuwa kolumny z nullami
+drop_axis0 = df_nulls.dropna(axis = 0) #usuwa wiersze z nullami
+drop_all = df_nulls.dropna(how = 'all') #usuwa wiersze z nullami tylko tam
+                                        #gdzie cały wiersz jest nullem
+drop_thresh = df_nulls.dropna(thresh = 2) #Keep only the rows with at least 
+                                          #x non-NA values
+drop_col = df_nulls.dropna(subset = ['Car']) #usuwa tylko nulle z danej kolumny
+                                             #wywala jednak caly wiersz
+
 
