@@ -118,25 +118,26 @@ num_cols = num_df.columns
 #for numerical
 median_imputer = SimpleImputer(missing_values=np.nan, strategy='median')
 median_imputer = median_imputer.fit(df[['Car', 'BuildingArea']])
-imputed_df_median = pd.DataFrame(median_imputer.transform(df[['Car', 'BuildingArea']]))
+imputed_df_median = pd.DataFrame(median_imputer.transform(df[['Car', 'BuildingArea']])).rename(columns = {0 : 'SI_Car', 1 : 'SI_BuildingArea'})
 
 #for categorical
 mode_imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
 mode_imputer = mode_imputer.fit(df[['CouncilArea']])
-imputed_df_mode = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']]))
+imputed_df_mode = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']])).rename(columns = {0 : 'SI_CouncilArea'})
 
 #for time?
 
 '''2.Pandas'''
 median_pd_nans = pd.DataFrame()
 for col in ['Car', 'BuildingArea']:
-    median_pd_nans[col] = df[col].fillna(df[col].median())
+    median_pd_nans['pd_' + col] = df[col].fillna(df[col].median())
 
 #bfill -> do tyłu, ffil -> do przodu
-pd_bfill_ffill = df_null['CouncilArea'].bfill().ffill().rename('CouncilArea').to_frame()
+pd_bfill_ffill = df_null['CouncilArea'].bfill().ffill().rename('pd_CouncilArea').to_frame()
 
 '''3.Key-nearest-neighbours'''
 from sklearn.impute import KNNImputer
+from functools import reduce
 #mapping for KNN for categorical values
 uniqe_CouncilArea = dict (enumerate (df_null['CouncilArea'].unique().flatten()))
 #reverse key-value for mapper
@@ -146,12 +147,13 @@ impt = KNNImputer(missing_values=np.nan)
 df_null['CouncilAreaID'] = df_null['CouncilArea'].map(uniqe_CouncilArea)
 impt = impt.fit(df_null[['Car', 'BuildingArea', 'CouncilAreaID']])
 impt_results = pd.DataFrame(impt.transform(df_null[['Car', 'BuildingArea', 'CouncilAreaID']]))
-impt_results = impt_results.rename(columns = {0 : 'Car', 1 : 'BuildingArea', 2 : 'CouncilAreaID'})
+impt_results = impt_results.rename(columns = {0 : 'KNN_Car', 1 : 'KNN_BuildingArea', 2 : 'KNN_CouncilAreaID'})
 #re-mapping
-impt_results['CouncilArea'] = impt_results['CouncilAreaID'].map({v: k for k, v in uniqe_CouncilArea.items()})
+impt_results['KNN_CouncilArea'] = impt_results['KNN_CouncilAreaID'].map({v: k for k, v in uniqe_CouncilArea.items()})
 
 '''Zestawienie wyników'''
-
+data_frames = [df_null, imputed_df_median, imputed_df_mode, median_pd_nans, pd_bfill_ffill, impt_results]
+summary_df = pd.concat(data_frames, axis=1)
 
 #%%
 '''Usuwanie brakujacych danych'''
