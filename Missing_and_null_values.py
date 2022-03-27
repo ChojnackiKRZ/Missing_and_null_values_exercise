@@ -88,11 +88,24 @@ df = load_file('houses_data.csv')
 from sklearn.impute import SimpleImputer
 import numpy as np
 
+#numerical columns
 numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 num_df = df.select_dtypes(include=numerics)
 num_cols = num_df.columns
 
 #SimpleImputer
-mean_imputer = SimpleImputer(missing_values=np.nan, strategy='median')
-mean_imputer = mean_imputer.fit(df[num_cols])
-imputed_df = pd.DataFrame(mean_imputer.transform(df[num_cols]))
+#for numerical
+median_imputer = SimpleImputer(missing_values=np.nan, strategy='median')
+median_imputer = median_imputer.fit(df[['Car', 'BuildingArea']])
+imputed_df = pd.DataFrame(median_imputer.transform(df[['Car', 'BuildingArea']]))
+
+#for categorical
+mode_imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
+mode_imputer = mode_imputer.fit(df[['CouncilArea']])
+imputed_df_2 = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']]))
+
+#for time?
+
+
+#%%
+
