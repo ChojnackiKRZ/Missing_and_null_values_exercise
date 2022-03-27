@@ -46,9 +46,17 @@ df.dtypes
 numerics = ['int16', 'int32', 'int64', 'float16', 'float32', 'float64']
 num_df = df.select_dtypes(include=numerics)
 
+#duplicates
+if df.duplicated(keep = 'last').iloc[0] == False:
+    print ('No duplicates')
+else:
+    print ('Duplicates present')
+
 #correlation
+#values between 0.3 and -0.3 were hidden on heatmap to increase readability
 corr_matrix = num_df.corr()
-sns.heatmap(corr_matrix, annot=True)
+corr_matrix_logic_mask = ((corr_matrix < 0.3) | (corr_matrix < -0.3))
+sns.heatmap(corr_matrix, annot=True, mask = corr_matrix_logic_mask)
 plt.show()
 corr_price = corr_matrix['Price'].rename('Price_corr').to_frame()
 
@@ -61,8 +69,8 @@ from typing import List
 def load_file (file_name: str, columns: List[str] = 'All') -> pd.DataFrame:
     '''
     Allows to load a file in selected directory.
-    Parameter columns need list of strings. Default value is 'All', which
-    means on default whole file will be loaded.
+    Parameter columns needs a list of strings. Default value is 'All', which
+    means whole file will be loaded.
     Function returns 2 data frames: first for loaded file, second consisting of
     columns with nulls.
     '''
@@ -85,6 +93,8 @@ def load_file (file_name: str, columns: List[str] = 'All') -> pd.DataFrame:
 
 df = load_file('houses_data.csv')
 #%%
+'''Uzupełnianie brakujących danych'''
+'''1.SimpleImputer'''
 from sklearn.impute import SimpleImputer
 import numpy as np
 
@@ -97,17 +107,40 @@ num_cols = num_df.columns
 #for numerical
 median_imputer = SimpleImputer(missing_values=np.nan, strategy='median')
 median_imputer = median_imputer.fit(df[['Car', 'BuildingArea']])
-imputed_df = pd.DataFrame(median_imputer.transform(df[['Car', 'BuildingArea']]))
+imputed_df_median = pd.DataFrame(median_imputer.transform(df[['Car', 'BuildingArea']]))
 
 #for categorical
 mode_imputer = SimpleImputer(missing_values=np.nan, strategy='most_frequent')
 mode_imputer = mode_imputer.fit(df[['CouncilArea']])
-imputed_df_2 = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']]))
+imputed_df_mode = pd.DataFrame(mode_imputer.transform(df[['CouncilArea']]))
 
 #for time?
 
+'''2.Pandas'''
+median_pd_nans = pd.DataFrame()
+for col in ['Car', 'BuildingArea']:
+    median_pd_nans[col] = df[col].fillna(df[col].median())
 
+#bfill -> do tyłu, ffil -> do przodu
+pd_bfill_ffill = df_null['CouncilArea'].bfill().ffill().rename('CouncilArea').to_frame()
+
+'''3.Key-nearest-neighbours'''
+from sklearn.impute import KNNImputer
+#mapping for KNN for categorical values
+uniqe_CouncilArea = dict (enumerate (df_null['CouncilArea'].unique().flatten()))
+#reverse key-value for mapper
+uniqe_CouncilArea = {v: k for k, v in uniqe_CouncilArea.items()}
+impt = KNNImputer(missing_values=np.nan)
+#uniqe values for dict
+df_null['CouncilAreaID'] = df_null['CouncilArea'].map(uniqe_CouncilArea)
+impt = impt.fit(df_null[['Car', 'BuildingArea', 'CouncilAreaID']])
+impt_results = pd.DataFrame(impt.transform(df_null[['Car', 'BuildingArea', 'CouncilAreaID']]))
+impt_results = impt_results.rename(columns = {0 : 'Car', 1 : 'BuildingArea', 2 : 'CouncilAreaID'})
+#re-mapping
+impt_results['CouncilArea'] = impt_results['CouncilAreaID'].map({v: k for k, v in uniqe_CouncilArea.items()})
 #%%
+'''Usuwanie brakujacych danych'''
+'''1.Usuwanie wartosci pustych przy pomocy pandas'''
 df_nulls = df[null_cols]
 
 drop_axis1 = df_nulls.dropna(axis = 1) #usuwa kolumny z nullami
@@ -118,5 +151,4 @@ drop_thresh = df_nulls.dropna(thresh = 2) #Keep only the rows with at least
                                           #x non-NA values
 drop_col = df_nulls.dropna(subset = ['Car']) #usuwa tylko nulle z danej kolumny
                                              #wywala jednak caly wiersz
-
 
