@@ -4,7 +4,7 @@ Created on Sun Mar 27 10:56:47 2022
 
 @author: krzys
 """
-
+'''Zadanie 1'''
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
@@ -51,4 +51,24 @@ corr_matrix = num_df.corr()
 sns.heatmap(corr_matrix, annot=True)
 plt.show()
 corr_price = corr_matrix['Price'].rename('Price_corr').to_frame()
+
+
+#%%
+'''Zadanie 2'''
+import pandas as pd
+from typing import List
+
+def load_file (file_name: str, columns: List[str]) -> pd.DataFrame:
+    file_name = str(file_name)
+    if type(columns) != list:
+        raise TypeError('columns parameter must be a list of strings')
+    else:
+        for types in columns:
+            if type(types) != str:
+                raise TypeError('each value in list must be a string')
+    return pd.read_csv(file_name, usecols=columns)
+
+
+
+
  
