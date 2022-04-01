@@ -4,11 +4,22 @@ Created on Sun Mar 27 10:56:47 2022
 
 @author: krzys
 """
-"""Zadanie 1"""
+"""
+Zadania wstępne:
+-wczytaj plik csv
+-wyświetl liczbę (tablica + bar plot z %) brakujących wartości per cecha (kolumna)
+-sprawdź typy danych
+-sprawdź czy są duplikaty (opcjonalnie)
+-wyznacz korelacje cech vs kolumna 'Price'
+-utwórz histogramy (3 na jednym plocie) dla różnej liczby pokoi vs cena 
+(sprawdź ile jest mieszkań dla danej liczby pokoi i wyznacz reprezentatywne przedziały) 
+    - opcjonalnie
+"""
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
 import seaborn as sns
+
 
 pd.options.display.float_format = "{:.2%}".format
 
@@ -72,12 +83,18 @@ plt.show()
 corr_price = corr_matrix["Price"].rename("Price_corr").to_frame()
 
 #%%
-"""Zadanie 2"""
+"""Zadanie główne:
+
+1. Wczytaj ponownie plik (utwórz funkcję), gdzie:
+
+będą pobierane tylko wybrane kolumny,
+zostaną zdefiniowane typy ww. kolumn.
+"""
 import pandas as pd
 from typing import List
 
 
-def load_file(file_name: str, columns: List[str] = "All") -> pd.DataFrame:
+def load_file(file_name: str, dtypes: List[str] = None, columns: List[str] = "All") -> pd.DataFrame:
     """
     Allows to load a file in selected directory.
     Parameter columns needs a list of strings. Default value is 'All', which
@@ -94,13 +111,16 @@ def load_file(file_name: str, columns: List[str] = "All") -> pd.DataFrame:
     else:
         if type(columns) != list:
             raise TypeError("columns parameter must be a list of strings")
+        elif dtypes != None and type(dtypes) != list:
+            raise TypeError("dtypes must be a list of strings")
         else:
             for types in columns:
                 if type(types) != str:
                     raise TypeError("each value in list must be a string")
+        dictionary = dict(zip(columns, dtypes))
         df = pd.read_csv(file_name, usecols=columns)
         null_cols = df.columns[df.isna().any()].rename("col_name")
-        return pd.read_csv(file_name, usecols=columns)
+        return pd.read_csv(file_name, usecols = columns, dtype = dictionary)
 
 
 df = load_file("houses_data.csv")
@@ -174,19 +194,6 @@ data_frames = [
 ]
 summary_df = pd.concat(data_frames, axis=1)
 
-#%%
-"""Usuwanie brakujacych danych"""
-"""1.Usuwanie wartosci pustych przy pomocy pandas"""
-df_nulls = df[null_cols]
-
-drop_axis1 = df_nulls.dropna(axis=1)  # usuwa kolumny z nullami
-drop_axis0 = df_nulls.dropna(axis=0)  # usuwa wiersze z nullami
-drop_all = df_nulls.dropna(how="all")  # usuwa wiersze z nullami tylko tam
-# gdzie cały wiersz jest nullem
-drop_thresh = df_nulls.dropna(thresh=2)  # Keep only the rows with at least
-# x non-NA values
-drop_col = df_nulls.dropna(subset=["Car"])  # usuwa tylko nulle z danej kolumny
-# wywala jednak caly wiersz
 
 #%%
 # train-test-split
